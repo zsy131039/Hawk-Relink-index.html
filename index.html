@@ -1,1 +1,123 @@
-此网站正在维护！  https://zsy131039.github.io/Hawk-Relink-index.html/  Relink电竞
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Relink 电竞</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .top-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            padding: 30px;
+            background: linear-gradient(90deg, #ffd000, #ffec60);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-wrap {
+            position: relative;
+        }
+
+        .logo {
+            font-size: 34px;
+            font-weight: 900;
+            color: #fff;
+            -webkit-text-stroke: 2.5px #000;
+            letter-spacing: 3px;
+            white-space: nowrap;
+            font-family: "Microsoft YaHei", sans-serif;
+            cursor: pointer;
+        }
+
+        /* 悬浮才显示提示文字 */
+        .hover-tip {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            font-size: 13px;
+            color: #222;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .logo-wrap:hover .hover-tip {
+            opacity: 1;
+        }
+
+        .time-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            letter-spacing: 1px;
+        }
+
+        .full-line {
+            position: fixed;
+            top: 90px;
+            left: 0;
+            width: 100vw;
+            height: 2px;
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-gradient">
+        <div class="logo-wrap">
+            <div class="logo" id="textArea">Relink 电竞</div>
+            <div class="hover-tip">点击切换中英文</div>
+        </div>
+        <div class="time-date" id="clock"></div>
+    </div>
+    <div class="full-line"></div>
+
+    <script>
+        // 中英文文本单独定义
+        const chineseText = "Relink 电竞";
+        const englishText = "Relink Esports";
+
+        const ele = document.getElementById("textArea");
+        let isChinese = true;
+        ele.innerText = chineseText;
+
+        // 点击切换语言
+        ele.addEventListener("click", () => {
+            isChinese = !isChinese;
+            ele.innerText = isChinese ? chineseText : englishText;
+        });
+
+        // 实时时钟
+        function updateTime() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0');
+            const mi = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').innerText = `${y}-${m}-${d} ${h}:${mi}:${s}`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

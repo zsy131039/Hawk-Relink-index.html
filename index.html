@@ -19,7 +19,6 @@
             font-family: "Microsoft YaHei", sans-serif;
         }
 
-        /* 顶部黄色渐变栏 */
         .top-gradient {
             position: fixed;
             top: 0;
@@ -70,7 +69,6 @@
             letter-spacing: 1px;
         }
 
-        /* 顶部分隔黑线 */
         .top-line {
             position: fixed;
             top: 90px;
@@ -81,7 +79,6 @@
             z-index: 9;
         }
 
-        /* 横向导航菜单 */
         .nav-menu {
             position: fixed;
             top: 92px;
@@ -105,7 +102,6 @@
             padding: 5px 0;
         }
 
-        /* 菜单选中下划线渐显动画 */
         .nav-item::after {
             content: "";
             position: absolute;
@@ -122,7 +118,22 @@
             opacity: 1;
         }
 
-        /* 弹窗遮罩层 */
+        /* 页面内容显示区域 */
+        .content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.8;
+            display: none;
+        }
+        .content.show {
+            display: block;
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -136,7 +147,6 @@
             align-items: center;
         }
 
-        /* 登录注册弹窗 */
         .modal {
             width: 400px;
             background: #fff;
@@ -227,7 +237,6 @@
             display: none;
         }
 
-        /* 管理员用户列表 */
         .user-list {
             margin-top: 15px;
             max-height: 150px;
@@ -245,7 +254,6 @@
 </head>
 
 <body>
-    <!-- 顶部栏 -->
     <div class="top-gradient">
         <div class="logo-wrap">
             <div class="logo" id="textArea">Relink 电竞</div>
@@ -254,10 +262,8 @@
         <div class="time-date" id="clock"></div>
     </div>
 
-    <!-- 顶部黑线 -->
     <div class="top-line"></div>
 
-    <!-- 导航菜单 -->
     <div class="nav-menu">
         <div class="nav-item active" data-page="home">主页</div>
         <div class="nav-item" data-page="order">点单</div>
@@ -265,7 +271,9 @@
         <div class="nav-item" data-page="about">关于</div>
     </div>
 
-    <!-- 登录注册弹窗 -->
+    <!-- 页面内容 -->
+    <div class="content" id="content"></div>
+
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <span class="close-btn" id="closeModal">×</span>
@@ -276,7 +284,6 @@
                 <div class="tab" data-panel="register">注册</div>
             </div>
 
-            <!-- 登录面板 -->
             <div class="form-panel active" id="loginPanel">
                 <div class="form-item">
                     <label>用户名</label>
@@ -288,12 +295,9 @@
                 </div>
                 <div class="tip-text" id="loginTip">用户名或密码错误</div>
                 <button class="btn" id="submitLogin">登录</button>
-
-                <!-- 管理员查看用户列表 -->
                 <div class="user-list" id="adminUserList" style="display:none;"></div>
             </div>
 
-            <!-- 注册面板 -->
             <div class="form-panel" id="registerPanel">
                 <div class="form-item">
                     <label>邮箱/手机号</label>
@@ -318,20 +322,21 @@
     </div>
 
     <script>
-        // ==================== 基础配置 ====================
         const chineseText = "Relink 电竞";
         const englishText = "Relink Esports";
         const textEle = document.getElementById("textArea");
+        const content = document.getElementById("content");
         let isChinese = true;
+        let isLogin = false;
         textEle.innerText = chineseText;
 
-        // 点击切换中英文
+        // 中英文切换
         textEle.addEventListener("click", () => {
             isChinese = !isChinese;
             textEle.innerText = isChinese ? chineseText : englishText;
         });
 
-        // ==================== 实时时钟 ====================
+        // 实时时钟
         function updateTime() {
             const now = new Date();
             const y = now.getFullYear();
@@ -345,23 +350,51 @@
         updateTime();
         setInterval(updateTime, 1000);
 
-        // ==================== 导航菜单 ====================
+        // 导航菜单切换
         const navItems = document.querySelectorAll(".nav-item");
         const loginBtn = document.getElementById("loginBtn");
         const modalOverlay = document.getElementById("modalOverlay");
-        
+
         navItems.forEach(item => {
             item.addEventListener("click", () => {
                 navItems.forEach(el => el.classList.remove("active"));
                 item.classList.add("active");
-                if(item.dataset.page === "login") {
+                const page = item.dataset.page;
+
+                content.classList.add("show");
+                if (page === "home") {
+                    if (!isLogin) {
+                        content.innerText = "对不起，请先登录再查看";
+                    } else {
+                        content.innerText = "此页面正在维护中";
+                    }
+                } else if (page === "order") {
+                    if (!isLogin) {
+                        content.innerText = "对不起，请先登录再查看";
+                    } else {
+                        content.innerText = "此页面正在维护中";
+                    }
+                } else if (page === "about") {
+                    content.innerHTML = `
+                        管理员：赵诗远 王睿涵 高维俊<br>
+                        Relink 电竞<br>
+                        2026-4创建<br>
+                        联系方式：3923500604@qq.com 1784496760@qq.com chinadreamteam@163.com 微信:13050130614
+                    `;
+                } else if (page === "login") {
                     modalOverlay.style.display = "flex";
+                    content.classList.remove("show");
                 }
             });
         });
 
-        // ==================== 本地用户存储 ====================
-        // 管理员账号：admin 密码：131010
+        // 初始化默认显示主页
+        window.onload = () => {
+            content.innerText = "对不起，请先登录再查看";
+            content.classList.add("show");
+        };
+
+        // 初始化用户
         function initUsers() {
             if(!localStorage.getItem("users")) {
                 const users = [
@@ -372,22 +405,19 @@
         }
         initUsers();
 
-        // 获取用户列表
         function getUsers() {
             return JSON.parse(localStorage.getItem("users")) || [];
         }
 
-        // 保存用户
         function saveUser(user) {
             const users = getUsers();
             users.push(user);
             localStorage.setItem("users", JSON.stringify(users));
         }
 
-        // ==================== 弹窗切换 ====================
+        // 弹窗切换
         const tabs = document.querySelectorAll(".tab");
         const panels = document.querySelectorAll(".form-panel");
-        
         tabs.forEach(tab => {
             tab.addEventListener("click", () => {
                 tabs.forEach(t => t.classList.remove("active"));
@@ -404,7 +434,7 @@
             document.getElementById("regTip").style.display = "none";
         });
 
-        // ==================== 注册功能 ====================
+        // 注册
         document.getElementById("submitRegister").addEventListener("click", () => {
             const contact = document.getElementById("regContact").value.trim();
             const username = document.getElementById("regUser").value.trim();
@@ -417,39 +447,28 @@
                 tip.style.display = "block";
                 return;
             }
-
             if(pwd !== pwd2) {
                 tip.innerText = "两次密码不一致";
                 tip.style.display = "block";
                 return;
             }
-
             const users = getUsers();
-            const exists = users.some(u => u.username === username);
-            if(exists) {
+            if(users.some(u => u.username === username)) {
                 tip.innerText = "用户名已存在";
                 tip.style.display = "block";
                 return;
             }
-
-            saveUser({
-                role: "user",
-                username: username,
-                password: pwd,
-                contact: contact
-            });
-
+            saveUser({role:"user",username,password:pwd,contact});
             alert("注册成功！");
             modalOverlay.style.display = "none";
         });
 
-        // ==================== 登录功能 ====================
+        // 登录
         document.getElementById("submitLogin").addEventListener("click", () => {
             const username = document.getElementById("loginUser").value.trim();
             const pwd = document.getElementById("loginPwd").value.trim();
             const tip = document.getElementById("loginTip");
             const userList = document.getElementById("adminUserList");
-
             const users = getUsers();
             const target = users.find(u => u.username === username && u.password === pwd);
 
@@ -458,31 +477,18 @@
                 userList.style.display = "none";
                 return;
             }
-
             tip.style.display = "none";
             modalOverlay.style.display = "none";
             loginBtn.innerText = username;
+            isLogin = true;
 
-            if(target.role === "admin") {
-                loginBtn.onclick = () => {
-                    modalOverlay.style.display = "flex";
-                    userList.style.display = "block";
-                    userList.innerHTML = "";
-                    users.forEach(u => {
-                        const div = document.createElement("div");
-                        div.className = "user-item";
-                        div.innerText = `用户：${u.username} | 联系方式：${u.contact} | 密码：${u.password}`;
-                        userList.appendChild(div);
-                    });
-                };
-            }
+            // 刷新当前页面内容
+            document.querySelector(".nav-item.active").click();
         });
 
-        // 点击空白关闭弹窗
+        // 点击空白关闭
         modalOverlay.addEventListener("click", (e) => {
-            if(e.target === modalOverlay) {
-                modalOverlay.style.display = "none";
-            }
+            if(e.target === modalOverlay) modalOverlay.style.display = "none";
         });
     </script>
 </body>

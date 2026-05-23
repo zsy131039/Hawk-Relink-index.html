@@ -118,17 +118,17 @@
             opacity: 1;
         }
 
-        /* 页面内容显示区域 */
         .content {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             text-align: center;
-            line-height: 1.8;
+            line-height: 2.2;
             display: none;
+            max-width: 800px;
         }
         .content.show {
             display: block;
@@ -267,11 +267,11 @@
     <div class="nav-menu">
         <div class="nav-item active" data-page="home">主页</div>
         <div class="nav-item" data-page="order">点单</div>
+        <div class="nav-item" data-page="rule">规定</div>
         <div class="nav-item" data-page="login" id="loginBtn">登录</div>
         <div class="nav-item" data-page="about">关于</div>
     </div>
 
-    <!-- 页面内容 -->
     <div class="content" id="content"></div>
 
     <div class="modal-overlay" id="modalOverlay">
@@ -330,13 +330,11 @@
         let isLogin = false;
         textEle.innerText = chineseText;
 
-        // 中英文切换
         textEle.addEventListener("click", () => {
             isChinese = !isChinese;
             textEle.innerText = isChinese ? chineseText : englishText;
         });
 
-        // 实时时钟
         function updateTime() {
             const now = new Date();
             const y = now.getFullYear();
@@ -350,7 +348,6 @@
         updateTime();
         setInterval(updateTime, 1000);
 
-        // 导航菜单切换
         const navItems = document.querySelectorAll(".nav-item");
         const loginBtn = document.getElementById("loginBtn");
         const modalOverlay = document.getElementById("modalOverlay");
@@ -362,24 +359,24 @@
                 const page = item.dataset.page;
 
                 content.classList.add("show");
-                if (page === "home") {
-                    if (!isLogin) {
+                if (page === "home" || page === "order") {
+                    content.innerText = isLogin ? "此页面正在维护中" : "对不起，请先登录再查看";
+                } else if (page === "rule") {
+                    if(!isLogin){
                         content.innerText = "对不起，请先登录再查看";
-                    } else {
-                        content.innerText = "此页面正在维护中";
-                    }
-                } else if (page === "order") {
-                    if (!isLogin) {
-                        content.innerText = "对不起，请先登录再查看";
-                    } else {
-                        content.innerText = "此页面正在维护中";
+                    }else{
+                        content.innerHTML = `
+1.打手双倒算炸单，这把不算，还要打（疾风干员开大自救不算）。<br>
+2.打手没有达到保底不能结单，老板举报可以补单<br>
+3.老板可以养鼠鼠，但是如果见面不打暗号不鼠来不开大的大部分是老鼠，不能养
+                        `;
                     }
                 } else if (page === "about") {
                     content.innerHTML = `
-                        管理员：赵诗远 王睿涵 高维俊<br>
-                        Relink 电竞<br>
-                        2026-4创建<br>
-                        联系方式：3923500604@qq.com 1784496760@qq.com chinadreamteam@163.com 微信:13050130614
+管理员：赵诗远 王睿涵 高维俊<br>
+Relink 电竞<br>
+2026-4创建<br>
+联系方式：3923500604@qq.com 1784496760@qq.com chinadreamteam@163.com 微信:13050130614
                     `;
                 } else if (page === "login") {
                     modalOverlay.style.display = "flex";
@@ -388,13 +385,11 @@
             });
         });
 
-        // 初始化默认显示主页
         window.onload = () => {
             content.innerText = "对不起，请先登录再查看";
             content.classList.add("show");
         };
 
-        // 初始化用户
         function initUsers() {
             if(!localStorage.getItem("users")) {
                 const users = [
@@ -415,26 +410,23 @@
             localStorage.setItem("users", JSON.stringify(users));
         }
 
-        // 弹窗切换
         const tabs = document.querySelectorAll(".tab");
         const panels = document.querySelectorAll(".form-panel");
         tabs.forEach(tab => {
             tab.addEventListener("click", () => {
                 tabs.forEach(t => t.classList.remove("active"));
                 panels.forEach(p => p.classList.remove("active"));
-                tab.classList.add("active");
                 document.getElementById(`${tab.dataset.panel}Panel`).classList.add("active");
+                tab.classList.add("active");
             });
         });
 
-        // 关闭弹窗
         document.getElementById("closeModal").addEventListener("click", () => {
             modalOverlay.style.display = "none";
             document.getElementById("loginTip").style.display = "none";
             document.getElementById("regTip").style.display = "none";
         });
 
-        // 注册
         document.getElementById("submitRegister").addEventListener("click", () => {
             const contact = document.getElementById("regContact").value.trim();
             const username = document.getElementById("regUser").value.trim();
@@ -463,7 +455,6 @@
             modalOverlay.style.display = "none";
         });
 
-        // 登录
         document.getElementById("submitLogin").addEventListener("click", () => {
             const username = document.getElementById("loginUser").value.trim();
             const pwd = document.getElementById("loginPwd").value.trim();
@@ -481,12 +472,9 @@
             modalOverlay.style.display = "none";
             loginBtn.innerText = username;
             isLogin = true;
-
-            // 刷新当前页面内容
             document.querySelector(".nav-item.active").click();
         });
 
-        // 点击空白关闭
         modalOverlay.addEventListener("click", (e) => {
             if(e.target === modalOverlay) modalOverlay.style.display = "none";
         });

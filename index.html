@@ -16,8 +16,10 @@
             height: 100vh;
             background: #ffffff;
             overflow: hidden;
+            font-family: "Microsoft YaHei", sans-serif;
         }
 
+        /* 顶部黄色渐变栏 */
         .top-gradient {
             position: fixed;
             top: 0;
@@ -28,6 +30,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 10;
         }
 
         .logo-wrap {
@@ -41,11 +44,9 @@
             -webkit-text-stroke: 2.5px #000;
             letter-spacing: 3px;
             white-space: nowrap;
-            font-family: "Microsoft YaHei", sans-serif;
             cursor: pointer;
         }
 
-        /* 悬浮才显示提示文字 */
         .hover-tip {
             position: absolute;
             top: 110%;
@@ -69,18 +70,182 @@
             letter-spacing: 1px;
         }
 
-        .full-line {
+        /* 顶部分隔黑线 */
+        .top-line {
             position: fixed;
             top: 90px;
             left: 0;
             width: 100vw;
             height: 2px;
             background: #000;
+            z-index: 9;
+        }
+
+        /* 横向导航菜单 */
+        .nav-menu {
+            position: fixed;
+            top: 92px;
+            left: 0;
+            display: flex;
+            padding: 0 30px;
+            gap: 60px;
+            height: 50px;
+            align-items: center;
+            z-index: 8;
+            background: #fff;
+            width: 100vw;
+        }
+
+        .nav-item {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        /* 菜单选中下划线渐显动画 */
+        .nav-item::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ffd000, #ffec60);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .nav-item.active::after {
+            opacity: 1;
+        }
+
+        /* 弹窗遮罩层 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 登录注册弹窗 */
+        .modal {
+            width: 400px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-group {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            color: #ffd000;
+            border-bottom: 2px solid #ffd000;
+        }
+
+        .form-item {
+            margin-bottom: 15px;
+        }
+
+        .form-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-item input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #ffd000, #ffec60);
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-panel {
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        .tip-text {
+            font-size: 12px;
+            color: red;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 管理员用户列表 */
+        .user-list {
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            font-size: 12px;
+        }
+
+        .user-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f5f5f5;
         }
     </style>
 </head>
 
 <body>
+    <!-- 顶部栏 -->
     <div class="top-gradient">
         <div class="logo-wrap">
             <div class="logo" id="textArea">Relink 电竞</div>
@@ -88,24 +253,85 @@
         </div>
         <div class="time-date" id="clock"></div>
     </div>
-    <div class="full-line"></div>
+
+    <!-- 顶部黑线 -->
+    <div class="top-line"></div>
+
+    <!-- 导航菜单 -->
+    <div class="nav-menu">
+        <div class="nav-item active" data-page="home">主页</div>
+        <div class="nav-item" data-page="order">点单</div>
+        <div class="nav-item" data-page="login" id="loginBtn">登录</div>
+        <div class="nav-item" data-page="about">关于</div>
+    </div>
+
+    <!-- 登录注册弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <span class="close-btn" id="closeModal">×</span>
+            <div class="modal-title">请登录/注册</div>
+            
+            <div class="tab-group">
+                <div class="tab active" data-panel="login">登录</div>
+                <div class="tab" data-panel="register">注册</div>
+            </div>
+
+            <!-- 登录面板 -->
+            <div class="form-panel active" id="loginPanel">
+                <div class="form-item">
+                    <label>用户名</label>
+                    <input type="text" id="loginUser" placeholder="请输入用户名">
+                </div>
+                <div class="form-item">
+                    <label>密码</label>
+                    <input type="password" id="loginPwd" placeholder="请输入密码">
+                </div>
+                <div class="tip-text" id="loginTip">用户名或密码错误</div>
+                <button class="btn" id="submitLogin">登录</button>
+
+                <!-- 管理员查看用户列表 -->
+                <div class="user-list" id="adminUserList" style="display:none;"></div>
+            </div>
+
+            <!-- 注册面板 -->
+            <div class="form-panel" id="registerPanel">
+                <div class="form-item">
+                    <label>邮箱/手机号</label>
+                    <input type="text" id="regContact" placeholder="请输入邮箱或手机号">
+                </div>
+                <div class="form-item">
+                    <label>用户名</label>
+                    <input type="text" id="regUser" placeholder="请输入用户名">
+                </div>
+                <div class="form-item">
+                    <label>密码</label>
+                    <input type="password" id="regPwd" placeholder="请输入密码">
+                </div>
+                <div class="form-item">
+                    <label>确认密码</label>
+                    <input type="password" id="regPwd2" placeholder="请再次输入密码">
+                </div>
+                <div class="tip-text" id="regTip">密码不一致</div>
+                <button class="btn" id="submitRegister">注册</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // 中英文文本单独定义
+        // ==================== 基础配置 ====================
         const chineseText = "Relink 电竞";
         const englishText = "Relink Esports";
-
-        const ele = document.getElementById("textArea");
+        const textEle = document.getElementById("textArea");
         let isChinese = true;
-        ele.innerText = chineseText;
+        textEle.innerText = chineseText;
 
-        // 点击切换语言
-        ele.addEventListener("click", () => {
+        // 点击切换中英文
+        textEle.addEventListener("click", () => {
             isChinese = !isChinese;
-            ele.innerText = isChinese ? chineseText : englishText;
+            textEle.innerText = isChinese ? chineseText : englishText;
         });
 
-        // 实时时钟
+        // ==================== 实时时钟 ====================
         function updateTime() {
             const now = new Date();
             const y = now.getFullYear();
@@ -118,6 +344,146 @@
         }
         updateTime();
         setInterval(updateTime, 1000);
+
+        // ==================== 导航菜单 ====================
+        const navItems = document.querySelectorAll(".nav-item");
+        const loginBtn = document.getElementById("loginBtn");
+        const modalOverlay = document.getElementById("modalOverlay");
+        
+        navItems.forEach(item => {
+            item.addEventListener("click", () => {
+                navItems.forEach(el => el.classList.remove("active"));
+                item.classList.add("active");
+                if(item.dataset.page === "login") {
+                    modalOverlay.style.display = "flex";
+                }
+            });
+        });
+
+        // ==================== 本地用户存储 ====================
+        // 管理员账号：admin 密码：131010
+        function initUsers() {
+            if(!localStorage.getItem("users")) {
+                const users = [
+                    { role: "admin", username: "admin", password: "131010", contact: "管理员" }
+                ];
+                localStorage.setItem("users", JSON.stringify(users));
+            }
+        }
+        initUsers();
+
+        // 获取用户列表
+        function getUsers() {
+            return JSON.parse(localStorage.getItem("users")) || [];
+        }
+
+        // 保存用户
+        function saveUser(user) {
+            const users = getUsers();
+            users.push(user);
+            localStorage.setItem("users", JSON.stringify(users));
+        }
+
+        // ==================== 弹窗切换 ====================
+        const tabs = document.querySelectorAll(".tab");
+        const panels = document.querySelectorAll(".form-panel");
+        
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                panels.forEach(p => p.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById(`${tab.dataset.panel}Panel`).classList.add("active");
+            });
+        });
+
+        // 关闭弹窗
+        document.getElementById("closeModal").addEventListener("click", () => {
+            modalOverlay.style.display = "none";
+            document.getElementById("loginTip").style.display = "none";
+            document.getElementById("regTip").style.display = "none";
+        });
+
+        // ==================== 注册功能 ====================
+        document.getElementById("submitRegister").addEventListener("click", () => {
+            const contact = document.getElementById("regContact").value.trim();
+            const username = document.getElementById("regUser").value.trim();
+            const pwd = document.getElementById("regPwd").value.trim();
+            const pwd2 = document.getElementById("regPwd2").value.trim();
+            const tip = document.getElementById("regTip");
+
+            if(!contact || !username || !pwd || !pwd2) {
+                tip.innerText = "请填写完整信息";
+                tip.style.display = "block";
+                return;
+            }
+
+            if(pwd !== pwd2) {
+                tip.innerText = "两次密码不一致";
+                tip.style.display = "block";
+                return;
+            }
+
+            const users = getUsers();
+            const exists = users.some(u => u.username === username);
+            if(exists) {
+                tip.innerText = "用户名已存在";
+                tip.style.display = "block";
+                return;
+            }
+
+            saveUser({
+                role: "user",
+                username: username,
+                password: pwd,
+                contact: contact
+            });
+
+            alert("注册成功！");
+            modalOverlay.style.display = "none";
+        });
+
+        // ==================== 登录功能 ====================
+        document.getElementById("submitLogin").addEventListener("click", () => {
+            const username = document.getElementById("loginUser").value.trim();
+            const pwd = document.getElementById("loginPwd").value.trim();
+            const tip = document.getElementById("loginTip");
+            const userList = document.getElementById("adminUserList");
+
+            const users = getUsers();
+            const target = users.find(u => u.username === username && u.password === pwd);
+
+            if(!target) {
+                tip.style.display = "block";
+                userList.style.display = "none";
+                return;
+            }
+
+            tip.style.display = "none";
+            modalOverlay.style.display = "none";
+            loginBtn.innerText = username;
+
+            if(target.role === "admin") {
+                loginBtn.onclick = () => {
+                    modalOverlay.style.display = "flex";
+                    userList.style.display = "block";
+                    userList.innerHTML = "";
+                    users.forEach(u => {
+                        const div = document.createElement("div");
+                        div.className = "user-item";
+                        div.innerText = `用户：${u.username} | 联系方式：${u.contact} | 密码：${u.password}`;
+                        userList.appendChild(div);
+                    });
+                };
+            }
+        });
+
+        // 点击空白关闭弹窗
+        modalOverlay.addEventListener("click", (e) => {
+            if(e.target === modalOverlay) {
+                modalOverlay.style.display = "none";
+            }
+        });
     </script>
 </body>
 </html>

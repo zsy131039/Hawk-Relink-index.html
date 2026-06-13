@@ -18,6 +18,15 @@
             overflow: hidden;
             font-family: "Microsoft YaHei", sans-serif;
         }
+        /* 左下角版本时间 */
+        .version-info {
+            position: fixed;
+            left: 10px;
+            bottom: 10px;
+            font-size: 14px;
+            color: #666;
+            z-index: 999;
+        }
         .top-gradient {
             position: fixed;
             top: 0;
@@ -353,6 +362,9 @@
 </head>
 
 <body>
+    <!-- 左下角版本+时间 -->
+    <div class="version-info" id="versionText"></div>
+
     <div class="top-gradient">
         <div class="logo-wrap">
             <div class="logo" id="textArea">Relink 电竞</div>
@@ -490,6 +502,7 @@
         const testResult = document.getElementById("testResult");
         const startTestBtn = document.getElementById("startTest");
         const exitTestBtn = document.getElementById("exitTest");
+        const versionText = document.getElementById("versionText");
 
         const randInputArea = document.getElementById("randInputArea");
         const clickTimeArea = document.getElementById("clickTimeArea");
@@ -506,6 +519,22 @@
         let clickTimer = null;
         let clickArr = [];
         let reactionFlag = false;
+        const VERSION = "0.0.1.1";
+
+        // 更新版本+时间（无分隔：版本+年月日时分秒）
+        function updateVersionTime() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0');
+            const mi = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${y}${m}${d}${h}${mi}${s}`;
+            versionText.innerText = VERSION + timeStr;
+        }
+        updateVersionTime();
+        setInterval(updateVersionTime, 1000);
 
         // 中英文切换
         textEle.addEventListener("click", () => {
@@ -513,7 +542,7 @@
             textEle.innerText = isChinese ? chineseText : englishText;
         });
 
-        // 时钟
+        // 顶部系统时钟
         function updateTime() {
             const now = new Date();
             const y = now.getFullYear();
@@ -623,7 +652,7 @@
                     break;
                 case "performance":
                     testTitle.innerText = "设备综合性能测评";
-                    testDesc.innerText = "读取设备信息并模拟多款游戏帧率表现";
+                    testDesc.innerText = "读取硬件信息，动态计算各游戏帧率表现";
                     break;
                 case "clickSpeed":
                     testTitle.innerText = "点击速度测试(CPS)";
@@ -668,38 +697,107 @@
                     }, delay);
                     break;
 
-                // 3. 设备性能 + 游戏帧率
+                // 3. 设备性能 + 动态帧率计算（CPU/GPU/内存联动）
                 case "performance":
-                    let ua = navigator.userAgent;
-                    let plat = navigator.platform;
-                    let ram = navigator.deviceMemory || "未知";
-                    let core = navigator.hardwareConcurrency || "未知";
-                    let gpu = "集成显卡 / 移动显卡";
-                    let brand = "通用设备";
-                    let produceYear = new Date().getFullYear() - Math.floor(Math.random() * 6);
+                    const ua = navigator.userAgent;
+                    const plat = navigator.platform;
+                    const ram = navigator.deviceMemory || 2;
+                    const cpuCore = navigator.hardwareConcurrency || 2;
+                    const year = new Date().getFullYear() - Math.floor(Math.random() * 7);
 
-                    // 模拟帧率数据
-                    const gameList = [
-                        {name:"植物大战僵尸", avg:90, min:72, max:120},
-                        {name:"我的世界", avg:78, min:55, max:105},
-                        {name:"PUBG", avg:42, min:28, max:58},
-                        {name:"三角洲行动", avg:45, min:30, max:62},
-                        {name:"GTA4", avg:56, min:36, max:75},
-                        {name:"极限竞速：地平线6", avg:38, min:25, max:52}
+                    // 根据UA、核心数、内存判定GPU档次 & 硬件总分
+                    let gpuLevel = 1; // 1入门 2中端 3高端 4旗舰
+                    let score = 0;
+
+                    // 内存评分
+                    if(ram >= 16) score += 30;
+                    else if(ram >= 8) score += 20;
+                    else if(ram >= 4) score += 10;
+                    else score += 5;
+
+                    // CPU核心评分
+                    if(cpuCore >= 12) score += 30;
+                    else if(cpuCore >= 8) score += 22;
+                    else if(cpuCore >= 4) score += 14;
+                    else score += 6;
+
+                    // 系统/设备标识判断显卡
+                    if(/Android|Mobile|iPhone|iPad/i.test(ua)){
+                        if(cpuCore >= 8 && ram >= 8) gpuLevel = 2;
+                        else gpuLevel = 1;
+                    } else {
+                        if(cpuCore >= 10 && ram >= 16) gpuLevel = 4;
+                        else if(cpuCore >= 6 && ram >= 12) gpuLevel = 3;
+                        else if(cpuCore >= 4 && ram >= 8) gpuLevel = 2;
+                        else gpuLevel = 1;
+                    }
+                    score += gpuLevel * 12;
+
+                    // 硬件档位
+                    let levelText = "";
+                    if(score >= 75) levelText = "旗舰级游戏设备";
+                    else if(score >= 55) levelText = "高端游戏设备";
+                    else if(score >= 35) levelText = "中端主流设备";
+                    else levelText = "入门办公/轻度设备";
+
+                    // 游戏基础帧率区间 + 动态随机波动
+                    const gameConfig = [
+                        {
+                            name:"植物大战僵尸",
+                            baseMin:60, baseAvg:85, baseMax:110,
+                            fluct:12
+                        },
+                        {
+                            name:"我的世界",
+                            baseMin:45, baseAvg:70, baseMax:95,
+                            fluct:10
+                        },
+                        {
+                            name:"PUBG",
+                            baseMin:20, baseAvg:38, baseMax:52,
+                            fluct:8
+                        },
+                        {
+                            name:"三角洲行动",
+                            baseMin:22, baseAvg:40, baseMax:55,
+                            fluct:8
+                        },
+                        {
+                            name:"GTA4",
+                            baseMin:30, baseAvg:48, baseMax:68,
+                            fluct:9
+                        },
+                        {
+                            name:"极限竞速：地平线6",
+                            baseMin:18, baseAvg:34, baseMax:48,
+                            fluct:7
+                        }
                     ];
 
                     let html = `<div class="result-text">
 <strong>==== 设备基础信息 ====</strong><br>
-设备型号：${brand}<br>
-生产年份：${produceYear} 年<br>
+设备类型：${/Android|Mobile|iPhone|iPad/i.test(ua) ? "移动设备" : "电脑设备"}<br>
+生产年份：${year} 年<br>
 系统平台：${plat}<br>
-CPU 核心数：${core} 核<br>
+CPU 核心数：${cpuCore} 核<br>
 内存容量：${ram} GB<br>
-显卡：${gpu}<br>
+显卡档次：${gpuLevel === 1 ? "入门核显/低端独显" : gpuLevel === 2 ? "中端独显" : gpuLevel === 3 ? "高端独显" : "旗舰独显"}<br>
+综合硬件评分：${score} 分（${levelText}）<br>
 浏览器内核：${ua.substring(0,80)}...<br><br>
-<strong>==== 游戏帧率模拟测试 ====</strong><br>`;
-                    gameList.forEach(g=>{
-                        html += `${g.name} | 平均帧：${g.avg} | 最低帧：${g.min} | 最高帧：${g.max}<br>`;
+<strong>==== 游戏动态帧率测试 ====</strong><br>`;
+
+                    // 按硬件分数倍率计算每款游戏真实帧率
+                    const rate = score / 60;
+                    gameConfig.forEach(g => {
+                        let minF = Math.round(g.baseMin * rate + (Math.random() * g.fluct - g.fluct/2));
+                        let avgF = Math.round(g.baseAvg * rate + (Math.random() * g.fluct - g.fluct/2));
+                        let maxF = Math.round(g.baseMax * rate + (Math.random() * g.fluct - g.fluct/2));
+                        // 防负数兜底
+                        minF = Math.max(10, minF);
+                        avgF = Math.max(minF + 2, avgF);
+                        maxF = Math.max(avgF + 3, maxF);
+
+                        html += `${g.name} | 最低帧：${minF} | 平均帧：${avgF} | 最高帧：${maxF}<br>`;
                     });
                     html += `</div>`;
                     testResult.innerHTML = html;

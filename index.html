@@ -158,6 +158,38 @@
         .tool-item:hover {
             opacity: 0.9;
         }
+        /* 点单商品样式 */
+        .shop-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .shop-item {
+            background: url('https://picsum.photos/id/1002/800/600') center/cover no-repeat;
+            border-radius: 10px;
+            overflow: hidden;
+            color: white;
+            text-shadow: 1px 1px 3px #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
+        }
+        .shop-item .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .shop-item .price {
+            font-size: 18px;
+            color: #ffd000;
+            font-weight: bold;
+        }
         /* 测试弹窗 */
         .test-modal {
             position: fixed;
@@ -584,8 +616,33 @@
                 const page = item.dataset.page;
                 content.classList.add("show");
 
-                if (page === "home" || page === "order") {
+                if (page === "home") {
                     content.innerText = loginUser ? "欢迎使用" : "对不起，请先登录再查看";
+                } else if (page === "order") {
+                    if (!loginUser) {
+                        content.innerText = "对不起，请先登录再查看";
+                    } else {
+                        // 点单商品列表
+                        content.innerHTML = `
+                        <div class="shop-container">
+                            <div class="shop-item">
+                                <div class="title">1. 100w普通双护（+100w5币）</div>
+                                <div class="price">--.--币</div>
+                            </div>
+                            <div class="shop-item">
+                                <div class="title">2. 100w魔王双护（+100w10币）</div>
+                                <div class="price">--.--币</div>
+                            </div>
+                            <div class="shop-item">
+                                <div class="title">3. 清图（普通/机密/绝密）</div>
+                                <div class="price">--.--币</div>
+                            </div>
+                            <div class="shop-item">
+                                <div class="title">4. 必出红（3小红/3中红/3大红）</div>
+                                <div class="price">--.--币</div>
+                            </div>
+                        </div>`;
+                    }
                 } else if (page === "rule") {
                     if (!loginUser) {
                         content.innerText = "对不起，请先登录再查看";

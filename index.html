@@ -18,11 +18,6 @@
             overflow: hidden;
             font-family: "Microsoft YaHei", sans-serif;
         }
-        /* 全局锁定星空背景 */
-        body.global-lock {
-            background: url('https://picsum.photos/id/1002/1920/1080') no-repeat center center fixed;
-            background-size: cover;
-        }
         .top-gradient {
             position: fixed;
             top: 0;
@@ -142,7 +137,6 @@
         .content.show {
             display: block;
         }
-        /* 账号弹窗 */
         .account-modal{
             position:fixed;
             top:0;
@@ -179,53 +173,6 @@
             width:100%;
             height:180px;
         }
-        /* 管理员后台 */
-        .admin-panel{
-            position:fixed;
-            top:0;
-            left:0;
-            width:100vw;
-            height:100vh;
-            background:rgba(0,0,0,0.7);
-            z-index:9999;
-            display:none;
-            align-items:center;
-            justify-content:center;
-        }
-        .admin-box{
-            background:#fff;
-            width:500px;
-            padding:30px;
-            border-radius:10px;
-        }
-        .admin-item{
-            margin:15px 0;
-        }
-        .admin-btn{
-            padding:10px 20px;
-            background:#ff4444;
-            color:#fff;
-            border:none;
-            border-radius:6px;
-            cursor:pointer;
-            margin-top:10px;
-        }
-        .admin-btn.green{
-            background:#00C853;
-        }
-        .admin-desc{
-            font-size:14px;
-            color:#666;
-            margin-top:5px;
-        }
-        input.admin-input{
-            width:100%;
-            padding:10px;
-            margin-top:5px;
-            border:1px solid #ddd;
-            border-radius:5px;
-        }
-
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -303,10 +250,6 @@
             cursor: pointer;
             color: #666;
         }
-        /* 锁定状态隐藏关闭按钮 */
-        body.global-lock .close-btn{
-            display:none !important;
-        }
         .form-panel {
             display: none;
         }
@@ -318,18 +261,6 @@
             color: red;
             margin-top: 5px;
             display: none;
-        }
-        .user-list {
-            margin-top: 15px;
-            max-height: 150px;
-            overflow-y: auto;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-            font-size: 12px;
-        }
-        .user-item {
-            padding: 5px 0;
-            border-bottom: 1px solid #f5f5f5;
         }
     </style>
 </head>
@@ -356,10 +287,9 @@
 
     <div class="content" id="content"></div>
 
-    <!-- 账号弹窗 -->
     <div class="account-modal" id="accModal">
         <div class="acc-box">
-            <h3>账号信息</h3
+            <h3>账号信息</h3>
             <div class="acc-item">用户名：<span id="accName">--</span></div>
             <div class="acc-item">联系方式：<span class="hide-text" id="accContact">点击查看</span></div>
             <div class="acc-item">账号密码：<span class="hide-text" id="accPwd">点击查看</span></div>
@@ -374,37 +304,10 @@
                 <input placeholder="输入账号密码确认注销" id="delPwdInput" style="width:100%;padding:8px;display:none;">
                 <button class="btn" id="confirmDel" style="display:none;margin-top:8px;">确认注销全设备账号</button>
             </div>
-            <div class="btn admin-set-btn" id="adminSetBtn" style="margin-top:10px;display:none;background:#ff4444;">网站总控设置</div>
             <div class="btn" style="margin-top:10px;" id="closeAccModal">关闭</div>
         </div>
     </div>
 
-    <!-- 管理员后台 -->
-    <div class="admin-panel" id="adminPanel">
-        <div class="admin-box">
-            <h3>🔧 管理员总控后台</h3>
-            <div class="admin-item">
-                <label><input type="checkbox" id="globalSiteLock"> 全局锁定网站（同浏览器全标签实时同步）</label>
-                <div class="admin-desc">锁定后仅显示登录页，星空背景，仅 admin 可进入系统；跨浏览器无法自动同步（浏览器存储隔离）</div>
-            </div>
-            <div class="admin-item">
-                <label>普通用户登录后显示文字：</label>
-                <input class="admin-input" id="userCustomText" placeholder="例如：系统维护中">
-            </div>
-            <div class="admin-item">
-                <button class="admin-btn green" id="saveAdminSet">保存设置【同浏览器立刻同步】</button>
-            </div>
-            <hr style="margin:20px 0">
-            <div class="admin-item">
-                <label>⚠️ 一键清空所有普通账户（保留admin）</label>
-                <div class="admin-desc">仅当前浏览器生效，不同浏览器数据独立</div>
-                <button class="admin-btn" id="delAllUser">删除所有普通账户</button>
-            </div>
-            <div class="btn" style="margin-top:20px;" id="closeAdmin">关闭后台</div>
-        </div>
-    </div>
-
-    <!-- 登录弹窗 -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <span class="close-btn" id="closeModal">×</span>
@@ -455,91 +358,11 @@
         const content = document.getElementById("content");
         const accModal = document.getElementById("accModal");
         const topUserTip = document.getElementById("topUserTip");
-        const adminPanel = document.getElementById("adminPanel");
         const modalOverlay = document.getElementById("modalOverlay");
         const closeModalBtn = document.getElementById("closeModal");
         let isChinese = true;
         let loginUser = null;
         let coinChart = null;
-
-        // 同浏览器多页面实时通讯
-        const bc = new BroadcastChannel('siteLockChannel');
-
-        // 初始化配置
-        function initConfig() {
-            if (!localStorage.getItem("siteConfig")) {
-                const def = {
-                    globalLock: false,
-                    userText: "此页面正在维护中"
-                };
-                localStorage.setItem("siteConfig", JSON.stringify(def));
-            }
-        }
-        initConfig();
-
-        function getConfig() {
-            return JSON.parse(localStorage.getItem("siteConfig"));
-        }
-        function setConfig(cfg) {
-            localStorage.setItem("siteConfig", JSON.stringify(cfg));
-            bc.postMessage({type:"configUpdate"});
-        }
-
-        // 监听同浏览器其他页面配置变更
-        bc.onmessage = ()=>{
-            checkGlobalLock();
-        }
-        // Storage事件监听localStorage修改，同源页面自动刷新锁定
-        window.addEventListener('storage',(e)=>{
-            if(e.key === 'siteConfig') checkGlobalLock();
-        })
-
-        // 每3秒轮询刷新当前页面锁定状态（新开页面自动读取最新）
-        setInterval(checkGlobalLock,3000);
-
-        // ESC锁定拦截
-        document.addEventListener("keydown",function(e){
-            const cfg = getConfig();
-            if(cfg.globalLock && e.key === "Escape" && modalOverlay.style.display === "flex"){
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        })
-
-        // 锁定渲染
-        function checkGlobalLock() {
-            const cfg = getConfig();
-            if (cfg.globalLock) {
-                document.body.classList.add("global-lock");
-                document.querySelector(".nav-menu").style.display = "none";
-                document.querySelector(".top-gradient").style.display = "none";
-                document.querySelector(".top-line").style.display = "none";
-                content.style.display = "none";
-                modalOverlay.style.display = "flex";
-            } else {
-                document.body.classList.remove("global-lock");
-                document.querySelector(".nav-menu").style.display = "flex";
-                document.querySelector(".top-gradient").style.display = "flex";
-                document.querySelector(".top-line").style.display = "block";
-            }
-        }
-        checkGlobalLock();
-
-        // 遮罩关闭
-        modalOverlay.onclick = (e) => {
-            const cfg = getConfig();
-            if(cfg.globalLock) return;
-            if (e.target === modalOverlay) modalOverlay.style.display = "none";
-        };
-
-        // 关闭按钮
-        closeModalBtn.onclick = function(){
-            const cfg = getConfig();
-            if(cfg.globalLock) return;
-            modalOverlay.style.display = "none";
-            document.getElementById("loginTip").style.display = "none";
-            document.getElementById("regTip").style.display = "none";
-        }
 
         // 中英文切换
         textEle.addEventListener("click", () => {
@@ -561,7 +384,7 @@
         updateTime();
         setInterval(updateTime, 1000);
 
-        // 用户初始化（修复重复覆盖用户数据）
+        // 用户初始化
         function initUsers() {
             if (!localStorage.getItem("users")) {
                 const users = [{
@@ -579,7 +402,7 @@
             localStorage.setItem("users", JSON.stringify(arr));
         }
 
-        // 导航点击
+        // 导航
         const navItems = document.querySelectorAll(".nav-item");
         const loginBtn = document.getElementById("loginBtn");
         navItems.forEach(item => {
@@ -588,9 +411,8 @@
                 item.classList.add("active");
                 const page = item.dataset.page;
                 content.classList.add("show");
-                const cfg = getConfig();
                 if (page === "home" || page === "order") {
-                    content.innerText = loginUser ? cfg.userText : "对不起，请先登录再查看";
+                    content.innerText = loginUser ? "欢迎使用" : "对不起，请先登录再查看";
                 } else if (page === "rule") {
                     if (!loginUser) content.innerText = "对不起，请先登录再查看";
                     else content.innerHTML = `
@@ -644,14 +466,12 @@ Relink 电竞<br>
 <div>货币：${u.coin}</div>`;
             topUserTip.querySelector('.acc-contact-top').onclick = () => topUserTip.querySelector('.acc-contact-top').innerText = "联系方式：" + u.contact;
             topUserTip.querySelector('.acc-pwd-top').onclick = () => topUserTip.querySelector('.acc-pwd-top').innerText = "密码：" + u.password;
-            document.getElementById('adminSetBtn').style.display = u.role === 'admin' ? 'block' : 'none';
         }
 
-        // 查看联系方式密码
         document.getElementById('accContact').onclick = function () { this.innerText = loginUser.contact; }
         document.getElementById('accPwd').onclick = function () { this.innerText = loginUser.password; }
 
-        // 账号锁定开关
+        // 账号锁定
         document.getElementById('lockAcc').onchange = function () {
             const arr = getUsers();
             const idx = arr.findIndex(x => x.username === loginUser.username);
@@ -661,7 +481,7 @@ Relink 电竞<br>
             alert(this.checked ? "账号已锁定，其他设备无法登录" : "账号解锁");
         };
 
-        // 退出登录
+        // 退出
         document.getElementById('logoutBtn').onclick = () => {
             loginUser = null;
             loginBtn.innerText = "登录";
@@ -670,7 +490,7 @@ Relink 电竞<br>
             document.querySelector('.nav-item.active').click();
         };
 
-        // 注销账号
+        // 注销
         document.getElementById('delAcc').onclick = () => {
             document.getElementById('delPwdInput').style.display = "block";
             document.getElementById('confirmDel').style.display = "block";
@@ -683,42 +503,24 @@ Relink 电竞<br>
             loginUser = null;
             loginBtn.innerText = "登录";
             accModal.style.display = "none";
-            alert("账号全设备注销成功");
+            alert("账号注销成功");
             document.querySelector('.nav-item.active').click();
         };
         document.getElementById('closeAccModal').onclick = () => {
             accModal.style.display = "none";
-            adminPanel.style.display = "none";
         };
 
-        // 管理员后台
-        document.getElementById('adminSetBtn').onclick = () => {
-            const cfg = getConfig();
-            document.getElementById('globalSiteLock').checked = cfg.globalLock;
-            document.getElementById('userCustomText').value = cfg.userText;
-            adminPanel.style.display = "flex";
+        // 登录弹窗关闭
+        modalOverlay.onclick = (e) => {
+            if (e.target === modalOverlay) modalOverlay.style.display = "none";
         };
-        document.getElementById('closeAdmin').onclick = () => adminPanel.style.display = "none";
-        document.getElementById('saveAdminSet').onclick = () => {
-            const cfg = getConfig();
-            cfg.globalLock = document.getElementById('globalSiteLock').checked;
-            cfg.userText = document.getElementById('userCustomText').value.trim();
-            setConfig(cfg);
-            alert("保存成功，当前浏览器所有页面同步生效，换浏览器需单独设置");
-            checkGlobalLock();
-            adminPanel.style.display = "none";
-        };
+        closeModalBtn.onclick = function(){
+            modalOverlay.style.display = "none";
+            document.getElementById("loginTip").style.display = "none";
+            document.getElementById("regTip").style.display = "none";
+        }
 
-        // 删除全部普通用户
-        document.getElementById('delAllUser').onclick = () => {
-            if (!confirm("确定删除当前浏览器内所有普通账号？admin保留")) return;
-            let users = getUsers().filter(u => u.role === "admin");
-            saveUsers(users);
-            alert("已清空当前浏览器所有普通账户");
-            adminPanel.style.display = "none";
-        };
-
-        // 登录注册标签切换
+        // 登录/注册标签
         const tabs = document.querySelectorAll(".tab");
         const panels = document.querySelectorAll(".form-panel");
         tabs.forEach(tab => {
@@ -730,7 +532,7 @@ Relink 电竞<br>
             });
         });
 
-        // 注册逻辑
+        // 注册
         document.getElementById("submitRegister").onclick = () => {
             const contact = document.getElementById("regContact").value.trim();
             const username = document.getElementById("regUser").value.trim();
@@ -748,12 +550,11 @@ Relink 电竞<br>
             modalOverlay.style.display = "none";
         };
 
-        // ==========【修复登录校验：去除空格，正确匹配密码】==========
+        // 登录
         document.getElementById("submitLogin").onclick = () => {
             const userInput = document.getElementById("loginUser").value.trim();
             const pwdInput = document.getElementById("loginPwd").value.trim();
             const list = getUsers();
-            // 精准匹配用户名+密码
             const target = list.find(item => item.username === userInput && item.password === pwdInput);
 
             if (!target) {
@@ -762,16 +563,9 @@ Relink 电竞<br>
             }
             if (target.lock) return alert("该账号已锁定，禁止登录");
 
-            const cfg = getConfig();
-            // 网站锁定：仅admin放行
-            if (cfg.globalLock && target.role !== "admin") {
-                alert("网站维护锁定，仅管理员账号可登录");
-                return;
-            }
             loginUser = target;
             loginBtn.innerText = userInput;
             modalOverlay.style.display = "none";
-            checkGlobalLock();
             document.querySelector(".nav-item.active").click();
         };
     </script>

@@ -137,6 +137,63 @@
         .content.show {
             display: block;
         }
+        /* 其他页面选项样式 */
+        .tool-item {
+            display: inline-block;
+            margin: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, #ffd000, #ffec60);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .tool-item:hover {
+            opacity: 0.9;
+        }
+        /* 测试弹窗样式 */
+        .test-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .test-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 400px;
+        }
+        .test-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .test-desc {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            margin: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .start-btn {
+            background: #00C853;
+            color: #fff;
+        }
+        .exit-btn {
+            background: #ff4444;
+            color: #fff;
+        }
         .account-modal{
             position:fixed;
             top:0;
@@ -282,10 +339,24 @@
         <div class="nav-item" data-page="order">点单</div>
         <div class="nav-item" data-page="rule">规定</div>
         <div class="nav-item" data-page="login" id="loginBtn">登录</div>
-        <div class="nav-item" data-page="about">关于</div>
+        <!-- 替换原关于页面为 其他 -->
+        <div class="nav-item" data-page="other">其他</div>
     </div>
 
     <div class="content" id="content"></div>
+
+    <!-- 功能测试通用弹窗 -->
+    <div class="test-modal" id="testModal">
+        <div class="test-box" id="testBox">
+            <div class="test-title" id="testTitle">测试标题</div>
+            <div class="test-desc" id="testDesc">测试说明</div>
+            <div id="testResult"></div>
+            <div style="margin-top: 20px;">
+                <button class="test-btn start-btn" id="startTest">开始测试</button>
+                <button class="test-btn exit-btn" id="exitTest">退出</button>
+            </div>
+        </div>
+    </div>
 
     <div class="account-modal" id="accModal">
         <div class="acc-box">
@@ -360,9 +431,18 @@
         const topUserTip = document.getElementById("topUserTip");
         const modalOverlay = document.getElementById("modalOverlay");
         const closeModalBtn = document.getElementById("closeModal");
+        const testModal = document.getElementById("testModal");
+        const testTitle = document.getElementById("testTitle");
+        const testDesc = document.getElementById("testDesc");
+        const testResult = document.getElementById("testResult");
+        const startTestBtn = document.getElementById("startTest");
+        const exitTestBtn = document.getElementById("exitTest");
+
         let isChinese = true;
         let loginUser = null;
         let coinChart = null;
+        let currentTest = ""; // 记录当前选中的测试类型
+        let testStartTime = 0;
 
         // 中英文切换
         textEle.addEventListener("click", () => {
@@ -402,7 +482,7 @@
             localStorage.setItem("users", JSON.stringify(arr));
         }
 
-        // 导航
+        // 导航菜单
         const navItems = document.querySelectorAll(".nav-item");
         const loginBtn = document.getElementById("loginBtn");
         navItems.forEach(item => {
@@ -411,27 +491,143 @@
                 item.classList.add("active");
                 const page = item.dataset.page;
                 content.classList.add("show");
+
                 if (page === "home" || page === "order") {
                     content.innerText = loginUser ? "欢迎使用" : "对不起，请先登录再查看";
                 } else if (page === "rule") {
-                    if (!loginUser) content.innerText = "对不起，请先登录再查看";
-                    else content.innerHTML = `
+                    if (!loginUser) {
+                        content.innerText = "对不起，请先登录再查看";
+                    } else {
+                        content.innerHTML = `
 1.打手双倒算炸单，这把不算，还要打（疾风干员开大自救不算）。<br>
 2.打手没有达到保底不能结单，老板举报可以补单<br>
 3.老板可以养鼠鼠，但是如果见面不打暗号不鼠来不开大的大部分是老鼠，不能养`;
-                } else if (page === "about") {
-                    content.innerHTML = `
-管理员：赵诗远 王睿涵 高维俊<br>
-Relink 电竞<br>
-2026-4创建<br>
-联系方式：3923500604@qq.com 1784496760@qq.com chinadreamteam@163.com 微信:13050130614`;
+                    }
+                }
+                // 其他页面：展示四个功能选项
+                else if (page === "other") {
+                    if (!loginUser) {
+                        content.innerText = "对不起，请先登录再查看";
+                    } else {
+                        content.innerHTML = `
+                            <p>请选择功能测试：</p>
+                            <div class="tool-item" data-tool="randomNum">随机数字</div>
+                            <div class="tool-item" data-tool="reaction">反应力测试</div>
+                            <div class="tool-item" data-tool="performance">设备性能测试</div>
+                            <div class="tool-item" data-tool="clickSpeed">点击速度测试</div>
+                        `;
+                        // 绑定选项点击事件
+                        bindToolClick();
+                    }
                 } else if (page === "login") {
                     if (!loginUser) {
                         modalOverlay.style.display = "flex";
                         content.classList.remove("show");
-                    } else openAccountInfo();
+                    } else {
+                        openAccountInfo();
+                    }
                 }
             });
+        });
+
+        // 绑定功能选项点击
+        function bindToolClick() {
+            const tools = document.querySelectorAll(".tool-item");
+            tools.forEach(tool => {
+                tool.addEventListener("click", () => {
+                    currentTest = tool.dataset.tool;
+                    openTestModal(currentTest);
+                });
+            });
+        }
+
+        // 打开测试弹窗
+        function openTestModal(type) {
+            testResult.innerHTML = "";
+            switch (type) {
+                case "randomNum":
+                    testTitle.innerText = "随机数字生成";
+                    testDesc.innerText = "点击开始，生成 1~100 之间的随机数字";
+                    break;
+                case "reaction":
+                    testTitle.innerText = "反应力测试";
+                    testDesc.innerText = "点击开始，出现提示后立即点击屏幕，测试你的反应时间";
+                    break;
+                case "performance":
+                    testTitle.innerText = "设备性能测试";
+                    testDesc.innerText = "点击开始，快速循环运算，检测设备运算速度";
+                    break;
+                case "clickSpeed":
+                    testTitle.innerText = "点击速度测试";
+                    testDesc.innerText = "1秒内快速点击按钮，统计总点击次数";
+                    break;
+            }
+            testModal.style.display = "flex";
+        }
+
+        // 退出测试
+        exitTestBtn.addEventListener("click", () => {
+            testModal.style.display = "none";
+            currentTest = "";
+        });
+
+        // 开始测试逻辑
+        startTestBtn.addEventListener("click", () => {
+            testResult.innerHTML = "";
+            switch (currentTest) {
+                case "randomNum":
+                    const num = Math.floor(Math.random() * 100) + 1;
+                    testResult.innerHTML = `<p>生成随机数：<strong>${num}</strong></p>`;
+                    break;
+
+                case "reaction":
+                    testResult.innerHTML = "<p>准备中...</p>";
+                    const delay = Math.floor(Math.random() * 2000) + 1000;
+                    setTimeout(() => {
+                        testResult.innerHTML = "<p style='color:red'>现在点击我！</p>";
+                        testStartTime = Date.now();
+                        // 点击计算反应时间
+                        testBox.onclick = function () {
+                            const endTime = Date.now();
+                            const time = endTime - testStartTime;
+                            testResult.innerHTML = `<p>你的反应时间：<strong>${time} 毫秒</strong></p>`;
+                            testBox.onclick = null;
+                        }
+                    }, delay);
+                    break;
+
+                case "performance":
+                    let count = 0;
+                    const perfStart = Date.now();
+                    // 循环运算
+                    for (let i = 0; i < 1000000; i++) {
+                        count += i;
+                    }
+                    const perfEnd = Date.now();
+                    const useTime = perfEnd - perfStart;
+                    testResult.innerHTML = `<p>一百万次运算耗时：<strong>${useTime} 毫秒</strong></p>`;
+                    break;
+
+                case "clickSpeed":
+                    let clickCount = 0;
+                    testResult.innerHTML = `<p>快速点击此处！剩余时间：1秒</p>`;
+                    testBox.onclick = () => {
+                        clickCount++;
+                    };
+                    const clickStart = Date.now();
+                    const timer = setInterval(() => {
+                        const now = Date.now();
+                        const left = 1000 - (now - clickStart);
+                        if (left <= 0) {
+                            clearInterval(timer);
+                            testBox.onclick = null;
+                            testResult.innerHTML = `<p>测试结束！1秒内点击：<strong>${clickCount} 次</strong></p>`;
+                        } else {
+                            testResult.innerHTML = `<p>快速点击此处！剩余时间：${(left/1000).toFixed(1)} 秒</p>`;
+                        }
+                    }, 50);
+                    break;
+            }
         });
 
         window.onload = () => {
